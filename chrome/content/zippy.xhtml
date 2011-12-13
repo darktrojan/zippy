@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<script type="application/x-javascript;version=1.7" src="zippy.js" defer="defer"></script>
+		<link rel="stylesheet" href="zippy.css" type="text/css" />
+	</head>
+
+	<body>
+
+		<h1 id="title"></h1>
+
+		<fieldset style="float: left; width: 300px;">
+			<p>Source: <span id="location"></span></p>
+			<label for="version">Version: </label><input type="text" id="version" /><br />
+			<input type="checkbox" id="dojarfile" /><label for="dojarfile"> Create chrome JAR</label><br />
+			<input type="checkbox" id="amoproperties" /><label for="amoproperties"> Include amo.properties files</label>
+			<div style="text-align: right;">
+				<button type="button" onclick="createXPI ();">Create XPI</button>
+			</div>
+		</fieldset>
+
+		<div style="margin-left: 350px;">
+			<ul id="log-log"></ul>
+
+			<h2 style="display: none;">Chrome Package</h2>
+			<ul id="jar-added" style="display: none;"></ul>
+
+			<h2 style="display: none;">Main Package</h2>
+			<ul id="main-added" style="display: none;"></ul>
+		</div>
+
+		<div style="clear: left;"></div>
+
+	</body>
+
+</html>

@@ -1,0 +1,41 @@
+body {
+	font-family: segoe ui, tahoma, sans-serif;
+	font-size: 9pt;
+	line-height: 18px;
+	margin: 1em;
+}
+div {
+	-moz-column-width: 25em;
+}
+h2 {
+	margin: 1rem 0;
+}
+ul {
+	margin: 1rem 0;
+	padding: 0;
+	list-style-position: inside;
+}
+.yes {
+	-moz-border-radius: 3px;
+	background: url("chrome://zippy/content/yes.gif") no-repeat scroll left center #00AA00;
+	color: #FFFFFF;
+	display: inline-block;
+	margin-left: 3px;
+	padding: 0 2px 0 16px;
+}
+.equal {
+	-moz-border-radius: 3px;
+	background: url("chrome://zippy/content/equal.gif") no-repeat scroll left center #FF9900;
+	color: #FFFFFF;
+	display: inline-block;
+	margin-left: 3px;
+	padding: 0 2px 0 16px;
+}
+.no {
+	-moz-border-radius: 3px;
+	background: url("chrome://zippy/content/no.gif") no-repeat scroll left center #CC0000;
+	color: #FFFFFF;
+	display: inline-block;
+	margin-left: 3px;
+	padding: 0 2px 0 16px;
+}
