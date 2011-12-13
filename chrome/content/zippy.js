@@ -303,9 +303,14 @@ function zipExtension () {
 }
 
 function jarAddDirectory (directory, wildcard, zipWriter) {
+	var files = [];
 	var entries = directory.directoryEntries;
 	while (entries.hasMoreElements ()) {
-		var file = entries.getNext ().QueryInterface (Ci.nsIFile);
+		files.push(entries.getNext().QueryInterface(Ci.nsIFile));
+	}
+	files.sort(sortFiles);
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
 		var relativePath = file.path.substring (dirPathLength + 7).replace (/\\/g, '/');
 
 		if (file.isDirectory ()) {
@@ -378,9 +383,14 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 		return;
 	}
 
+	var files = [];
 	var entries = directory.directoryEntries;
 	while (entries.hasMoreElements ()) {
-		var file = entries.getNext ().QueryInterface (Ci.nsIFile);
+		files.push(entries.getNext().QueryInterface(Ci.nsIFile));
+	}
+	files.sort(sortFiles);
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
 		var relativePath = file.path.substring (dirPathLength).replace (/\\/g, '/');
 
 		if (file.isDirectory ()) {
@@ -464,6 +474,14 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 		log (relativePath, 'main-added');
 		zipWriter.addEntryFile (relativePath, Ci.nsIZipWriter.COMPRESSION_DEFAULT, file, false);
 	}
+}
+
+function sortFiles(aFile, bFile) {
+	let aName = aFile.leafName.toLowerCase();
+	let bName = bFile.leafName.toLowerCase();
+	if (aName == bName)
+		return 0;
+	return aName < bName ? -1 : 1;
 }
 
 function checkLocales () {
