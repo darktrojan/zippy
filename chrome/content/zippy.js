@@ -12,14 +12,10 @@ var dirPathLength, listOfFiles;
 var locales = {};
 var localeObj = {};
 var directory, version;
-var doJarFile = false;
 var amoPropertiesFiles = false;
 
 var versionInput = document.getElementById ('version');
-var doJarFileInput = document.getElementById ('dojarfile');
 var amoPropertiesInput = document.getElementById ('amoproperties');
-var logLog = document.getElementById ('log-log');
-var jarLog = document.getElementById ('jar-added');
 var packageLog = document.getElementById ('main-added');
 
 AddonManager.getAddonByID (id, function (addon) {
@@ -32,7 +28,7 @@ if (directory && directory.isDirectory ()) {
 	dirPathLength = directory.path.length + 1;
 	document.getElementById ('location').textContent = directory.path;
 } else {
-	log (id + " couldn't be found, or it's already a .xpi file.");
+	log (id + " couldn't be found, or it's already a .xpi file.", "main-error");
 }
 
 function createXPI () {
@@ -44,22 +40,11 @@ function createXPI () {
 		data = data.replace (/<em:version>.*<\/em:version>/gi, '<em:version>' + version + '</em:version>');
 		writeFile (rdfFile, data);
 	}
-	doJarFile = doJarFileInput.checked;
 	amoPropertiesFiles = amoPropertiesInput.checked;
 
-	while (logLog.lastChild) {
-		logLog.removeChild (logLog.lastChild);
-	}
-	while (jarLog.lastChild) {
-		jarLog.removeChild (jarLog.lastChild);
-	}
-	jarLog.previousElementSibling.style.display = doJarFile ? 'block' : 'none';
-	jarLog.style.display = doJarFile ? 'block' : 'none';
 	while (packageLog.lastChild) {
 		packageLog.removeChild (packageLog.lastChild);
 	}
-	packageLog.previousElementSibling.style.display = 'block';
-	packageLog.style.display = 'block';
 
 	zipExtension (directory);
 }
@@ -160,16 +145,6 @@ function log (str, className) {
 	var li = document.createElementNS (XHTMLNS, 'li');
 	li.appendChild (document.createTextNode (str));
 	switch (className) {
-	case 'jar-added':
-		if (/^locale\/.{2,5}\/.+\.(dtd|properties)$/.test (str)) {
-			li.id = str.substring (7);
-		}
-		jarLog.appendChild (li);
-		return;
-	case 'jar-notadded':
-		li.style.color = '#ccc';
-		jarLog.appendChild (li);
-		return;
 	case 'main-added':
 		if (/^chrome\/locale\/.{2,5}\/.+\.(dtd|properties)$/.test (str)) {
 			li.id = str.substring (14);
@@ -183,9 +158,6 @@ function log (str, className) {
 	case 'main-error':
 		li.style.color = '#c00';
 		packageLog.appendChild (li);
-		return;
-	default:
-		logLog.appendChild (li);
 		return;
 	}
 }
@@ -260,29 +232,11 @@ function zipExtension () {
 		var chromeDir = directory.clone ();
 		chromeDir.append ('chrome');
 
-		if (doJarFile && chromeDir.exists ()) {
-			log ('Creating chrome.jar', 'meta');
-			var jarFile = chromeDir.clone ();
-			jarFile.append ('chrome.jar');
-			var jarWriter = Cc ["@mozilla.org/zipwriter;1"].createInstance (Ci.nsIZipWriter);
-			jarWriter.open (jarFile, 0x02 | 0x08 | 0x20);
-			jarAddDirectory (chromeDir, false, jarWriter);
-			jarWriter.close ();
-			log ('Finished creating chrome.jar', 'meta');
-		}
-
-		log ('Creating main package', 'meta');
 		var xpiFile = directory.clone ();
 		xpiFile.append (directory.leafName + "-" + version + ".xpi");
 		var xpiWriter = Cc ["@mozilla.org/zipwriter;1"].createInstance (Ci.nsIZipWriter);
 		xpiWriter.open (xpiFile, 0x02 | 0x08 | 0x20);
 		xpiAddDirectory (directory, false, xpiWriter);
-		log ('Finished creating main package', 'meta');
-
-		if (doJarFile && chromeDir.exists ()) {
-			log ('Removing temporary chrome.jar', 'meta');
-			jarFile.remove (true);
-		}
 
 		if (listOfFiles) {
 			for (var i = 0; i < listOfFiles.length; i++) {
@@ -302,86 +256,8 @@ function zipExtension () {
 	return true;
 }
 
-function jarAddDirectory (directory, wildcard, zipWriter) {
-	var files = [];
-	var entries = directory.directoryEntries;
-	while (entries.hasMoreElements ()) {
-		files.push(entries.getNext().QueryInterface(Ci.nsIFile));
-	}
-	files.sort(sortFiles);
-	for (var i = 0; i < files.length; i++) {
-		var file = files[i];
-		var relativePath = file.path.substring (dirPathLength + 7).replace (/\\/g, '/');
-
-		if (file.isDirectory ()) {
-			if (listOfFiles) {
-				var index = listOfFiles.indexOf ('chrome/' + relativePath);
-				var wildcardIndex = listOfFiles.indexOf ('chrome/' + relativePath + '/*');
-				if (!wildcard && index < 0 && wildcardIndex < 0) {
-					log ('Not added: ' + relativePath, 'jar-notadded');
-					continue;
-				}
-				if (index >= 0) {
-					listOfFiles.splice (index, 1);
-					wildcardIndex = listOfFiles.indexOf ('chrome/' + relativePath + '/*');
-				}
-				if (wildcardIndex >= 0) {
-					log (relativePath + ' (wildcard)', 'jar-added');
-					listOfFiles.splice (wildcardIndex, 1);
-				} else {
-					log (relativePath, 'jar-added');
-				}
-				zipWriter.addEntryDirectory (relativePath, file.lastModifiedTime * 1000, false);
-				jarAddDirectory (file, wildcard || wildcardIndex >= 0, zipWriter);
-			} else {
-				if (!zipWriter.hasEntry (relativePath)) {
-					log (relativePath, 'jar-added');
-					zipWriter.addEntryDirectory (relativePath, file.lastModifiedTime * 1000, false);
-				}
-				jarAddDirectory (file, wildcard, zipWriter);
-			}
-			continue;
-		}
-
-		if (/\.(jar|xpi|zip)$/i.test (relativePath)) {
-			continue;
-		}
-
-		if (!amoPropertiesFiles && /amo\.properties$/i.test (relativePath)) {
-			log ('Not added: ' + relativePath, 'jar-notadded');
-			continue;
-		}
-
-		if (/\.(properties|dtd)$/.test (relativePath)) {
-			if (typeof locales [directory.leafName] == 'undefined') {
-				locales [directory.leafName] = [];
-			}
-			locales [directory.leafName].push (file);
-		}
-
-		if (!wildcard && listOfFiles) {
-			var index = listOfFiles.indexOf ('chrome/' + relativePath);
-			if (index < 0) {
-				log ('Not added: ' + relativePath, 'jar-notadded');
-				continue;
-			}
-			listOfFiles.splice (index, 1);
-		}
-
-		log (relativePath, 'jar-added');
-		zipWriter.addEntryFile (relativePath, Ci.nsIZipWriter.COMPRESSION_DEFAULT, file, false);
-	}
-}
-
 function xpiAddDirectory (directory, wildcard, zipWriter) {
 	var dirRelativePath = directory.path.substring (dirPathLength).replace (/\\/g, '/');
-	if (doJarFile && dirRelativePath == 'chrome') {
-		log ('chrome/chrome.jar', 'main-added');
-		let jarFile = directory.clone ();
-		jarFile.append ('chrome.jar');
-		zipWriter.addEntryFile ('chrome/chrome.jar', Ci.nsIZipWriter.COMPRESSION_DEFAULT, jarFile, false);
-		return;
-	}
 
 	var files = [];
 	var entries = directory.directoryEntries;
@@ -419,26 +295,6 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 					zipWriter.addEntryDirectory (relativePath, file.lastModifiedTime * 1000, false);
 				}
 				xpiAddDirectory (file, wildcard, zipWriter);
-			}
-			continue;
-		}
-
-		if (doJarFile && relativePath == 'chrome.manifest') {
-			let lines = readFileLines (file);
-			let newLines = [];
-			for (let i = 0, iCount = lines.length; i < iCount; i++) {
-				newLines.push (lines [i].replace (/(\s)chrome\//, '$1jar:chrome/chrome.jar!/'));
-			}
-			let tmpFile = directory.clone ();
-			tmpFile.append ('chrome.manifest.tmp');
-			writeFile (tmpFile, newLines.join ('\n') + '\n');
-			log (relativePath, 'main-added');
-			zipWriter.addEntryFile (relativePath, Ci.nsIZipWriter.COMPRESSION_DEFAULT, tmpFile, false);
-			tmpFile.remove (true);
-
-			if (listOfFiles) {
-				var index = listOfFiles.indexOf (relativePath);
-				listOfFiles.splice (index, 1);
 			}
 			continue;
 		}
