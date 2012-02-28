@@ -34,7 +34,7 @@ var ZippyController = {
 					let recentDocument = recentWindow.document;
 					let tabMail = recentDocument.getElementById("tabmail");
 					tabMail.openTab("contentTab", {contentPage: tabURI});
-  				}
+				}
 				recentWindow.focus();
 				return;
 			}, false);

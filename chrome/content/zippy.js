@@ -136,8 +136,8 @@ function findInstall () {
 			if (dir.exists ()) {
 				return dir;
 			}
-        } catch (e) {
-        }
+		} catch (e) {
+		}
 	}
 }
 
@@ -213,20 +213,27 @@ function writeFile (file, data) {
 	converter.close ();
 }
 
-function zipExtension () {
+function readList (filename) {
 	var listFile = directory.clone ();
-	listFile.append ("xpi.list");
+	listFile.append (filename);
 
+	var list = [];
 	if (listFile.exists ()) {
-		listOfFiles = [];
-		let tempListOfFiles = readFileLines (listFile);
-		for (let i = 0, iCount = tempListOfFiles.length; i < iCount; i++) {
-			let line = tempListOfFiles [i].replace (/\\/g, '/');
-			if (line [0] == '#')
+		let lines = readFileLines (listFile);
+		for (let i = 0, iCount = lines.length; i < iCount; i++) {
+			let line = lines [i].replace (/\\/g, '/').trim ();
+			if (line.length == 0 || line [0] == '#')
 				continue;
-			listOfFiles.push (line);
+			list.push (line);
 		}
 	}
+	return list;
+}
+
+function zipExtension () {
+	listOfFiles = readList ('xpi.list');
+	listOfExcludedFiles = readList ('xpi-exclude.list');
+	listOfExcludedFiles.push ('*.list');
 
 	try {
 		var chromeDir = directory.clone ();
@@ -238,12 +245,8 @@ function zipExtension () {
 		xpiWriter.open (xpiFile, 0x02 | 0x08 | 0x20);
 		xpiAddDirectory (directory, false, xpiWriter);
 
-		if (listOfFiles) {
-			for (var i = 0; i < listOfFiles.length; i++) {
-				if (listOfFiles [i] != '') {
-					log ('Not found: ' + listOfFiles [i], 'main-error');
-				}
-			}
+		for (var i = 0; i < listOfFiles.length; i++) {
+			log ('Not found: ' + listOfFiles [i], 'main-error');
 		}
 
 		checkLocales ();
@@ -269,8 +272,24 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 		var file = files[i];
 		var relativePath = file.path.substring (dirPathLength).replace (/\\/g, '/');
 
+		if (listOfExcludedFiles.indexOf (relativePath) >= 0) {
+			log ('Excluded: ' + relativePath, 'main-notadded');
+			continue;
+		}
+		if (!file.isDirectory () && listOfExcludedFiles.some (function (excludedFile) {
+			if (excludedFile.indexOf ('*.') == 0) {
+				var extension = excludedFile.substring (1);
+				var index = relativePath.indexOf (extension);
+				return index >= 0 && index + extension.length == relativePath.length;
+			}
+			return false;
+		})) {
+			log ('Excluded: ' + relativePath, 'main-notadded');
+			continue;
+		}
+
 		if (file.isDirectory ()) {
-			if (listOfFiles) {
+			if (listOfFiles.length) {
 				var index = listOfFiles.indexOf (relativePath);
 				var wildcardIndex = listOfFiles.indexOf (relativePath + '/*');
 				if (!wildcard && index < 0 && wildcardIndex < 0) {
@@ -309,7 +328,7 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 			continue;
 		}
 
-		if (!wildcard && listOfFiles) {
+		if (!wildcard && listOfFiles.length) {
 			var index = listOfFiles.indexOf (relativePath);
 			if (index < 0) {
 				if (relativePath != 'xpi.list') {
