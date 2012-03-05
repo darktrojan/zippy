@@ -3,7 +3,7 @@
 
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>zippy@darktrojan.net</em:id>
-		<em:version>9</em:version>
+		<em:version>10</em:version>
 		<em:type>2</em:type>
 		<em:bootstrap>true</em:bootstrap>
 		<em:name>Zippy Extension Packager</em:name>

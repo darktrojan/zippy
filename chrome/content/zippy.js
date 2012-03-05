@@ -8,7 +8,9 @@ Cu.import ('resource://gre/modules/AddonManager.jsm');
 Cu.import ('resource://gre/modules/FileUtils.jsm');
 
 var id = location.search.replace ('?id=', '');
-var dirPathLength, listOfFiles;
+var dirPathLength;
+var listOfFiles, hasListOfFiles;
+var listOfExcludedFiles;
 var locales = {};
 var localeObj = {};
 var directory, version;
@@ -232,6 +234,7 @@ function readList (filename) {
 
 function zipExtension () {
 	listOfFiles = readList ('xpi.list');
+	hasListOfFiles = listOfFiles.length > 0;
 	listOfExcludedFiles = readList ('xpi-exclude.list');
 	listOfExcludedFiles.push ('*.list');
 
@@ -289,7 +292,7 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 		}
 
 		if (file.isDirectory ()) {
-			if (listOfFiles.length) {
+			if (hasListOfFiles) {
 				var index = listOfFiles.indexOf (relativePath);
 				var wildcardIndex = listOfFiles.indexOf (relativePath + '/*');
 				if (!wildcard && index < 0 && wildcardIndex < 0) {
@@ -328,7 +331,7 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 			continue;
 		}
 
-		if (!wildcard && listOfFiles.length) {
+		if (!wildcard && hasListOfFiles) {
 			var index = listOfFiles.indexOf (relativePath);
 			if (index < 0) {
 				if (relativePath != 'xpi.list') {
