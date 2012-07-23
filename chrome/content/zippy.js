@@ -237,6 +237,13 @@ function zipExtension () {
 	hasListOfFiles = listOfFiles.length > 0;
 	listOfExcludedFiles = readList ('xpi-exclude.list');
 	listOfExcludedFiles.push ('*.list');
+	listOfExcludedFiles.push ('*.xpi');
+	listOfExcludedFiles.push ('*.zip');
+	listOfExcludedFiles.push ('.git');
+	listOfExcludedFiles.push ('.gitignore');
+	listOfExcludedFiles.push ('.hg');
+	listOfExcludedFiles.push ('.hgignore');
+	listOfExcludedFiles.push ('.hgtags');
 
 	try {
 		var chromeDir = directory.clone ();
@@ -321,11 +328,6 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 			continue;
 		}
 
-		if (/\.(xpi|zip)$/i.test (relativePath)) {
-			log ('Not added: ' + relativePath, 'main-notadded');
-			continue;
-		}
-
 		if (!amoPropertiesFiles && /amo\.properties$/i.test (relativePath)) {
 			log ('Not added: ' + relativePath, 'main-notadded');
 			continue;
@@ -334,9 +336,6 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 		if (!wildcard && hasListOfFiles) {
 			var index = listOfFiles.indexOf (relativePath);
 			if (index < 0) {
-				if (relativePath != 'xpi.list') {
-					log ('Not added: ' + relativePath, 'main-notadded');
-				}
 				continue;
 			}
 			listOfFiles.splice (index, 1);
