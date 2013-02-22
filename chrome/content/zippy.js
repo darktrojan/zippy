@@ -336,6 +336,7 @@ function xpiAddDirectory (directory, wildcard, zipWriter) {
 		if (!wildcard && hasListOfFiles) {
 			var index = listOfFiles.indexOf (relativePath);
 			if (index < 0) {
+				log ('Not added: ' + relativePath, 'main-notadded');
 				continue;
 			}
 			listOfFiles.splice (index, 1);
