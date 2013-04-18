@@ -1,13 +1,13 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-const XHTMLNS = "http://www.w3.org/1999/xhtml";
+const XHTMLNS = 'http://www.w3.org/1999/xhtml';
 
-Cu.import ('resource://gre/modules/Services.jsm');
-Cu.import ('resource://gre/modules/AddonManager.jsm');
-Cu.import ('resource://gre/modules/FileUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/AddonManager.jsm');
+Cu.import('resource://gre/modules/FileUtils.jsm');
 
-var id = location.search.replace ('?id=', '');
+var id = location.search.replace('?id=', '');
 var dirPathLength;
 var listOfFiles, hasListOfFiles;
 var listOfExcludedFiles;
@@ -16,249 +16,249 @@ var localeObj = {};
 var directory, version;
 var amoPropertiesFiles = false;
 
-var versionInput = document.getElementById ('version');
-var amoPropertiesInput = document.getElementById ('amoproperties');
-var packageLog = document.getElementById ('main-added');
+var versionInput = document.getElementById('version');
+var amoPropertiesInput = document.getElementById('amoproperties');
+var packageLog = document.getElementById('main-added');
 
-AddonManager.getAddonByID (id, function (addon) {
-	document.getElementById ('title').textContent = document.title = 'Create XPI Package for ' + addon.name;
+AddonManager.getAddonByID(id, function(addon) {
+	document.getElementById('title').textContent = document.title = 'Create XPI Package for ' + addon.name;
 	version = versionInput.value = addon.version;
 	directory = addon.getResourceURI('').QueryInterface(Ci.nsIFileURL).file;
 
-	if (directory && directory.isDirectory ()) {
+	if (directory && directory.isDirectory()) {
 		dirPathLength = directory.path.length + 1;
-		document.getElementById ('location').textContent = directory.path;
+		document.getElementById('location').textContent = directory.path;
 	} else {
-		log (id + " couldn't be found, or it's already a .xpi file.", "main-error");
+		log(id + " couldn't be found, or it's already a .xpi file.", 'main-error');
 	}
 });
 
-function createXPI () {
-	let rdfFile = directory.clone ();
-	rdfFile.append ('install.rdf');
+function createXPI() {
+	let rdfFile = directory.clone();
+	rdfFile.append('install.rdf');
 	if (versionInput.value != version) {
 		version = versionInput.value;
-		let data = readFile (rdfFile);
-		data = data.replace (/<em:version>.*<\/em:version>/gi, '<em:version>' + version + '</em:version>');
-		writeFile (rdfFile, data);
+		let data = readFile(rdfFile);
+		data = data.replace(/<em:version>.*<\/em:version>/gi, '<em:version>' + version + '</em:version>');
+		writeFile(rdfFile, data);
 	}
 	amoPropertiesFiles = amoPropertiesInput.checked;
 
 	while (packageLog.lastChild) {
-		packageLog.removeChild (packageLog.lastChild);
+		packageLog.removeChild(packageLog.lastChild);
 	}
 
-	zipExtension (directory);
+	zipExtension(directory);
 }
 
-function log (str, className) {
-	var li = document.createElementNS (XHTMLNS, 'li');
-	li.appendChild (document.createTextNode (str));
+function log(str, className) {
+	var li = document.createElementNS(XHTMLNS, 'li');
+	li.appendChild(document.createTextNode(str));
 	switch (className) {
 	case 'main-added':
-		if (/^chrome\/locale\/.{2,5}\/.+\.(dtd|properties)$/.test (str)) {
-			li.id = str.substring (14);
+		if (/^chrome\/locale\/.{2,5}\/.+\.(dtd|properties)$/.test(str)) {
+			li.id = str.substring(14);
 		}
-		packageLog.appendChild (li);
+		packageLog.appendChild(li);
 		return;
 	case 'main-notadded':
 		li.style.color = '#ccc';
-		packageLog.appendChild (li);
+		packageLog.appendChild(li);
 		return;
 	case 'main-error':
 		li.style.color = '#c00';
-		packageLog.appendChild (li);
+		packageLog.appendChild(li);
 		return;
 	}
 }
 
-function readFile (file) {
+function readFile(file) {
 	var str = {};
 
-	var fiStream = Cc ["@mozilla.org/network/file-input-stream;1"].createInstance (Ci.nsIFileInputStream);
-	fiStream.init (file, -1, 0, 0);
+	var fiStream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
+	fiStream.init(file, -1, 0, 0);
 
-	var istream = Cc ["@mozilla.org/intl/converter-input-stream;1"].createInstance (Ci.nsIConverterInputStream);
-	istream.init (fiStream, "UTF-8", 0, 0);
-	istream.readString (-1, str);
-	istream.close ();
+	var istream = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
+	istream.init(fiStream, 'UTF-8', 0, 0);
+	istream.readString(-1, str);
+	istream.close();
 
 	return str.value;
 }
 
-function readFileLines (file) {
+function readFileLines(file) {
 	var lines = [];
 	try {
-		if (!file.exists ()) {
+		if (!file.exists()) {
 			return lines;
 		}
 
-		var fiStream = Cc ["@mozilla.org/network/file-input-stream;1"].createInstance (Ci.nsIFileInputStream);
-		fiStream.init (file, 0x01, 0444, 0);
+		var fiStream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
+		fiStream.init(file, 0x01, 0444, 0);
 
-		var istream = Cc ["@mozilla.org/intl/converter-input-stream;1"].createInstance (Ci.nsIConverterInputStream);
-		istream.init (fiStream, "UTF-8", 0, 0);
-		istream.QueryInterface (Ci.nsIUnicharLineInputStream);
+		var istream = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
+		istream.init(fiStream, 'UTF-8', 0, 0);
+		istream.QueryInterface(Ci.nsIUnicharLineInputStream);
 
 		var line = {}, hasmore;
 		do {
-			hasmore = istream.readLine (line);
-			lines.push (line.value);
+			hasmore = istream.readLine(line);
+			lines.push(line.value);
 		} while (hasmore);
 
-		istream.close ();
+		istream.close();
 	} catch (e) {
-		Cu.reportError (e);
+		Cu.reportError(e);
 	}
 	return lines;
 }
 
-function writeFile (file, data) {
-	var foStream = Cc ["@mozilla.org/network/file-output-stream;1"].createInstance (Ci.nsIFileOutputStream);
-	foStream.init (file, 0x02 | 0x08 | 0x20, 0666, 0);
+function writeFile(file, data) {
+	var foStream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+	foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
 
-	var converter = Cc ["@mozilla.org/intl/converter-output-stream;1"].createInstance (Ci.nsIConverterOutputStream);
-	converter.init (foStream, "UTF-8", 0, 0);
-	converter.writeString (data);
-	converter.close ();
+	var converter = Cc['@mozilla.org/intl/converter-output-stream;1'].createInstance(Ci.nsIConverterOutputStream);
+	converter.init(foStream, 'UTF-8', 0, 0);
+	converter.writeString(data);
+	converter.close();
 }
 
-function readList (filename) {
-	var listFile = directory.clone ();
-	listFile.append (filename);
+function readList(filename) {
+	var listFile = directory.clone();
+	listFile.append(filename);
 
 	var list = [];
-	if (listFile.exists ()) {
-		let lines = readFileLines (listFile);
+	if (listFile.exists()) {
+		let lines = readFileLines(listFile);
 		for (let i = 0, iCount = lines.length; i < iCount; i++) {
-			let line = lines [i].replace (/\\/g, '/').trim ();
-			if (line.length == 0 || line [0] == '#')
+			let line = lines[i].replace(/\\/g, '/').trim();
+			if (line.length == 0 || line[0] == '#')
 				continue;
-			list.push (line);
+			list.push(line);
 		}
 	}
 	return list;
 }
 
-function zipExtension () {
-	listOfFiles = readList ('xpi.list');
+function zipExtension() {
+	listOfFiles = readList('xpi.list');
 	hasListOfFiles = listOfFiles.length > 0;
-	listOfExcludedFiles = readList ('xpi-exclude.list');
-	listOfExcludedFiles.push ('*.list');
-	listOfExcludedFiles.push ('*.xpi');
-	listOfExcludedFiles.push ('*.zip');
-	listOfExcludedFiles.push ('.git');
-	listOfExcludedFiles.push ('.gitignore');
-	listOfExcludedFiles.push ('.hg');
-	listOfExcludedFiles.push ('.hgignore');
-	listOfExcludedFiles.push ('.hgtags');
+	listOfExcludedFiles = readList('xpi-exclude.list');
+	listOfExcludedFiles.push('*.list');
+	listOfExcludedFiles.push('*.xpi');
+	listOfExcludedFiles.push('*.zip');
+	listOfExcludedFiles.push('.git');
+	listOfExcludedFiles.push('.gitignore');
+	listOfExcludedFiles.push('.hg');
+	listOfExcludedFiles.push('.hgignore');
+	listOfExcludedFiles.push('.hgtags');
 
 	try {
-		var chromeDir = directory.clone ();
-		chromeDir.append ('chrome');
+		var chromeDir = directory.clone();
+		chromeDir.append('chrome');
 
-		var xpiFile = directory.clone ();
-		xpiFile.append (directory.leafName + "-" + version + ".xpi");
-		var xpiWriter = Cc ["@mozilla.org/zipwriter;1"].createInstance (Ci.nsIZipWriter);
-		xpiWriter.open (xpiFile, 0x02 | 0x08 | 0x20);
-		xpiAddDirectory (directory, false, xpiWriter);
+		var xpiFile = directory.clone();
+		xpiFile.append(directory.leafName + '-' + version + '.xpi');
+		var xpiWriter = Cc['@mozilla.org/zipwriter;1'].createInstance(Ci.nsIZipWriter);
+		xpiWriter.open(xpiFile, 0x02 | 0x08 | 0x20);
+		xpiAddDirectory(directory, false, xpiWriter);
 
 		for (var i = 0; i < listOfFiles.length; i++) {
-			log ('Not found: ' + listOfFiles [i], 'main-error');
+			log('Not found: ' + listOfFiles[i], 'main-error');
 		}
 
-		checkLocales ();
+		checkLocales();
 	} catch (e) {
-		Cu.reportError (e);
+		Cu.reportError(e);
 	} finally {
-		xpiWriter.close ();
+		xpiWriter.close();
 	}
 
 	return true;
 }
 
-function xpiAddDirectory (directory, wildcard, zipWriter) {
-	var dirRelativePath = directory.path.substring (dirPathLength).replace (/\\/g, '/');
+function xpiAddDirectory(directory, wildcard, zipWriter) {
+	var dirRelativePath = directory.path.substring(dirPathLength).replace(/\\/g, '/');
 
 	var files = [];
 	var entries = directory.directoryEntries;
-	while (entries.hasMoreElements ()) {
+	while (entries.hasMoreElements()) {
 		files.push(entries.getNext().QueryInterface(Ci.nsIFile));
 	}
 	files.sort(sortFiles);
 	for (var i = 0; i < files.length; i++) {
 		var file = files[i];
-		var relativePath = file.path.substring (dirPathLength).replace (/\\/g, '/');
+		var relativePath = file.path.substring(dirPathLength).replace(/\\/g, '/');
 
-		if (listOfExcludedFiles.indexOf (relativePath) >= 0) {
-			log ('Excluded: ' + relativePath, 'main-notadded');
+		if (listOfExcludedFiles.indexOf(relativePath) >= 0) {
+			log('Excluded: ' + relativePath, 'main-notadded');
 			continue;
 		}
-		if (!file.isDirectory () && listOfExcludedFiles.some (function (excludedFile) {
-			if (excludedFile.indexOf ('*.') == 0) {
-				var extension = excludedFile.substring (1);
-				var index = relativePath.indexOf (extension);
+		if (!file.isDirectory() && listOfExcludedFiles.some(function(excludedFile) {
+			if (excludedFile.indexOf('*.') == 0) {
+				var extension = excludedFile.substring(1);
+				var index = relativePath.indexOf(extension);
 				return index >= 0 && index + extension.length == relativePath.length;
 			}
 			return false;
 		})) {
-			log ('Excluded: ' + relativePath, 'main-notadded');
+			log('Excluded: ' + relativePath, 'main-notadded');
 			continue;
 		}
 
-		if (file.isDirectory ()) {
+		if (file.isDirectory()) {
 			if (hasListOfFiles) {
-				var index = listOfFiles.indexOf (relativePath);
-				var wildcardIndex = listOfFiles.indexOf (relativePath + '/*');
+				var index = listOfFiles.indexOf(relativePath);
+				var wildcardIndex = listOfFiles.indexOf(relativePath + '/*');
 				if (!wildcard && index < 0 && wildcardIndex < 0) {
-					log ('Not added: ' + relativePath, 'main-notadded');
+					log('Not added: ' + relativePath, 'main-notadded');
 					continue;
 				}
 				if (index >= 0) {
-					listOfFiles.splice (index, 1);
-					wildcardIndex = listOfFiles.indexOf (relativePath + '/*');
+					listOfFiles.splice(index, 1);
+					wildcardIndex = listOfFiles.indexOf(relativePath + '/*');
 				}
 				if (wildcardIndex >= 0) {
-					log (relativePath + ' (wildcard)', 'main-added');
-					listOfFiles.splice (wildcardIndex, 1);
+					log(relativePath + ' (wildcard)', 'main-added');
+					listOfFiles.splice(wildcardIndex, 1);
 				} else {
-					log (relativePath, 'main-added');
+					log(relativePath, 'main-added');
 				}
-				zipWriter.addEntryDirectory (relativePath, file.lastModifiedTime * 1000, false);
-				xpiAddDirectory (file, wildcard || wildcardIndex >= 0, zipWriter);
+				zipWriter.addEntryDirectory(relativePath, file.lastModifiedTime * 1000, false);
+				xpiAddDirectory(file, wildcard || wildcardIndex >= 0, zipWriter);
 			} else {
-				if (!zipWriter.hasEntry (relativePath)) {
-					log (relativePath, 'main-added');
-					zipWriter.addEntryDirectory (relativePath, file.lastModifiedTime * 1000, false);
+				if (!zipWriter.hasEntry(relativePath)) {
+					log(relativePath, 'main-added');
+					zipWriter.addEntryDirectory(relativePath, file.lastModifiedTime * 1000, false);
 				}
-				xpiAddDirectory (file, wildcard, zipWriter);
+				xpiAddDirectory(file, wildcard, zipWriter);
 			}
 			continue;
 		}
 
-		if (!amoPropertiesFiles && /amo\.properties$/i.test (relativePath)) {
-			log ('Not added: ' + relativePath, 'main-notadded');
+		if (!amoPropertiesFiles && /amo\.properties$/i.test(relativePath)) {
+			log('Not added: ' + relativePath, 'main-notadded');
 			continue;
 		}
 
 		if (!wildcard && hasListOfFiles) {
-			var index = listOfFiles.indexOf (relativePath);
+			var index = listOfFiles.indexOf(relativePath);
 			if (index < 0) {
-				log ('Not added: ' + relativePath, 'main-notadded');
+				log('Not added: ' + relativePath, 'main-notadded');
 				continue;
 			}
-			listOfFiles.splice (index, 1);
+			listOfFiles.splice(index, 1);
 		}
 
-		if (/\.(properties|dtd)$/.test (relativePath)) {
-			if (typeof locales [directory.leafName] == 'undefined') {
-				locales [directory.leafName] = [];
+		if (/\.(properties|dtd)$/.test(relativePath)) {
+			if (typeof locales[directory.leafName] == 'undefined') {
+				locales[directory.leafName] = [];
 			}
-			locales [directory.leafName].push (file);
+			locales[directory.leafName].push(file);
 		}
 
-		log (relativePath, 'main-added');
-		zipWriter.addEntryFile (relativePath, Ci.nsIZipWriter.COMPRESSION_DEFAULT, file, false);
+		log(relativePath, 'main-added');
+		zipWriter.addEntryFile(relativePath, Ci.nsIZipWriter.COMPRESSION_DEFAULT, file, false);
 	}
 }
 
@@ -270,40 +270,40 @@ function sortFiles(aFile, bFile) {
 	return aName < bName ? -1 : 1;
 }
 
-function checkLocales () {
+function checkLocales() {
 
-	if (!locales ['en-US']) {
+	if (!locales['en-US']) {
 		return;
 	}
 
 	for (var l in locales) {
 		var files = {};
-		for (var i = 0; i < locales [l].length; i++) {
-			var file = locales [l][i];
+		for (var i = 0; i < locales[l].length; i++) {
+			var file = locales[l][i];
 			var strings = {};
-			if (/\.properties/.test (file.leafName)) {
-				doPropertiesFile (file, strings);
+			if (/\.properties/.test(file.leafName)) {
+				doPropertiesFile(file, strings);
 			} else {
-				doDtdFile (file, strings);
+				doDtdFile(file, strings);
 			}
-			files [file.leafName] = strings;
+			files[file.leafName] = strings;
 		}
-		localeObj [l] = files;
+		localeObj[l] = files;
 	}
 
 	for (var l in localeObj) {
 		if (l == 'en-US')
 			continue;
 
-		for (var f in localeObj ['en-US']) {
-			if (!localeObj [l][f]) {
-				log (f + ' in ' + l + ' is missing', 'main-error');
+		for (var f in localeObj['en-US']) {
+			if (!localeObj[l][f]) {
+				log(f + ' in ' + l + ' is missing', 'main-error');
 				continue;
 			}
 			var yes = 0, equal = 0, no = 0;
-			for (var s in localeObj ['en-US'][f]) {
-				var enString = localeObj ['en-US'][f][s];
-				var lString = localeObj [l][f][s];
+			for (var s in localeObj['en-US'][f]) {
+				var enString = localeObj['en-US'][f][s];
+				var lString = localeObj[l][f][s];
 				if (typeof lString == 'undefined') {
 					no++;
 				} else if (lString == enString) {
@@ -312,45 +312,45 @@ function checkLocales () {
 					yes++;
 				}
 			}
-			var d = document.getElementById (l + '/' + f);
+			var d = document.getElementById(l + '/' + f);
 			if (d) {
-				var s = document.createElement ('span');
+				var s = document.createElement('span');
 				if (no > 0) {
 					s.className = 'no';
-					s.appendChild (document.createTextNode (no));
+					s.appendChild(document.createTextNode(no));
 				} else if (equal > 0) {
 					s.className = 'equal';
-					s.appendChild (document.createTextNode (equal));
+					s.appendChild(document.createTextNode(equal));
 				} else {
 					s.className = 'yes';
-					s.appendChild (document.createTextNode (yes));
+					s.appendChild(document.createTextNode(yes));
 				}
-				d.appendChild (s);
+				d.appendChild(s);
 			}
 		}
 	}
 }
 
-function doPropertiesFile (file, strings) {
+function doPropertiesFile(file, strings) {
 	var leafName = file.leafName;
-	var lines = readFileLines (file);
+	var lines = readFileLines(file);
 	for (let i = 0, iCount = lines.length; i < iCount; i++) {
-		var realLine = lines [i].replace (/#.*$/, '');
-		var m = realLine.match (/^([\w\.-]+)\s*=\s*(.*)$/);
+		var realLine = lines[i].replace(/#.*$/, '');
+		var m = realLine.match(/^([\w\.-]+)\s*=\s*(.*)$/);
 		if (m) {
-			strings [m [1]] = m [2];
+			strings[m[1]] = m[2];
 		}
 	}
 }
 
-function doDtdFile (file, strings) {
+function doDtdFile(file, strings) {
 	var leafName = file.leafName;
-	var lines = readFileLines (file);
+	var lines = readFileLines(file);
 	for (let i = 0, iCount = lines.length; i < iCount; i++) {
-		var realLine = lines [i].replace (/<!--.*$/, '');
-		var m = realLine.match (/ENTITY\s+([\w\.-]+)\s+"(.*)"/);
+		var realLine = lines[i].replace(/<!--.*$/, '');
+		var m = realLine.match(/ENTITY\s+([\w\.-]+)\s+"(.*)"/);
 		if (m) {
-			strings [m [1]] = m [2];
+			strings[m[1]] = m[2];
 		}
 	}
 }
