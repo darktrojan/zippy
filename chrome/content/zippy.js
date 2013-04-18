@@ -23,15 +23,15 @@ var packageLog = document.getElementById ('main-added');
 AddonManager.getAddonByID (id, function (addon) {
 	document.getElementById ('title').textContent = document.title = 'Create XPI Package for ' + addon.name;
 	version = versionInput.value = addon.version;
-});
+	directory = addon.getResourceURI('').QueryInterface(Ci.nsIFileURL).file;
 
-directory = findInstall ();
-if (directory && directory.isDirectory ()) {
-	dirPathLength = directory.path.length + 1;
-	document.getElementById ('location').textContent = directory.path;
-} else {
-	log (id + " couldn't be found, or it's already a .xpi file.", "main-error");
-}
+	if (directory && directory.isDirectory ()) {
+		dirPathLength = directory.path.length + 1;
+		document.getElementById ('location').textContent = directory.path;
+	} else {
+		log (id + " couldn't be found, or it's already a .xpi file.", "main-error");
+	}
+});
 
 function createXPI () {
 	let rdfFile = directory.clone ();
@@ -49,98 +49,6 @@ function createXPI () {
 	}
 
 	zipExtension (directory);
-}
-
-// adapted from XPIProvider.jsm
-function findInstall () {
-	let hasRegistry = ("nsIWindowsRegKey" in Ci);
-	let enabledScopes = AddonManager.SCOPE_ALL
-	try {
-		Services.prefs.getIntPref ("extensions.enabledScopes");
-	} catch (e) {
-	}
-	let directory;
-
-	// The profile location is always enabled
-	directory = findInDirectory ("ProfD", ["extensions"]);
-	if (directory) {
-		return directory;
-	}
-
-	if (enabledScopes & AddonManager.SCOPE_USER) {
-		directory = findInDirectory ("XREUSysExt", [Services.appinfo.ID]);
-		if (directory) {
-			return directory;
-		}
-		if (hasRegistry) {
-			directory = findInRegistry (Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER);
-			if (directory) {
-				return directory;
-			}
-		}
-	}
-
-	if (enabledScopes & AddonManager.SCOPE_APPLICATION) {
-		directory = findInDirectory ("XCurProcD", ["extensions"]);
-		if (directory) {
-			return directory;
-		}
-	}
-
-	if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
-		directory = findInDirectory ("XRESysLExtPD", [Services.appinfo.ID]);
-		if (directory) {
-			return directory;
-		}
-		if (hasRegistry) {
-			directory = findInRegistry (Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE);
-			if (directory) {
-				return directory;
-			}
-		}
-	}
-
-	function findInRegistry (rootKey) {
-		let appVendor = Services.appinfo.vendor;
-		let appName = Services.appinfo.name;
-
-		// XULRunner-based apps may intentionally not specify a vendor
-		if (appVendor != "")
-			appVendor += "\\";
-
-		// Thunderbird is stupid
-		if (appName == 'Thunderbird')
-			appVendor = 'Mozilla\\';
-
-		let key;
-		try {
-			key = Cc["@mozilla.org/windows-registry-key;1"].createInstance (Ci.nsIWindowsRegKey);
-			key.open (rootKey,
-				'SOFTWARE\\' + appVendor + appName + '\\Extensions',
-				Ci.nsIWindowsRegKey.ACCESS_READ);
-			if (key.hasValue (id)) {
-				var file = Cc["@mozilla.org/file/local;1"].createInstance (Ci.nsILocalFile);
-				file.initWithPath (key.readStringValue (id));
-				return file;
-			}
-		} catch (e) {
-			Cu.reportError (e);
-		} finally {
-			key.close ();
-		}
-		return null;
-	}
-
-	function findInDirectory (aKey, aPaths) {
-		try {
-			let dir = FileUtils.getDir (aKey, aPaths);
-			dir.append (id);
-			if (dir.exists ()) {
-				return dir;
-			}
-		} catch (e) {
-		}
-	}
 }
 
 function log (str, className) {
