@@ -7,18 +7,18 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/AddonManager.jsm');
 Cu.import('resource://gre/modules/FileUtils.jsm');
 
-var id = location.search.replace('?id=', '');
-var dirPathLength;
-var listOfFiles, hasListOfFiles;
-var listOfExcludedFiles;
-var locales = {};
-var localeObj = {};
-var directory, version;
-var amoPropertiesFiles = false;
+let id = location.search.replace('?id=', '');
+let dirPathLength;
+let listOfFiles, hasListOfFiles;
+let listOfExcludedFiles;
+let locales = {};
+let localeObj = {};
+let directory, version;
+let amoPropertiesFiles = false;
 
-var versionInput = document.getElementById('version');
-var amoPropertiesInput = document.getElementById('amoproperties');
-var packageLog = document.getElementById('main-added');
+let versionInput = document.getElementById('version');
+let amoPropertiesInput = document.getElementById('amoproperties');
+let packageLog = document.getElementById('main-added');
 
 AddonManager.getAddonByID(id, function(addon) {
 	document.getElementById('title').textContent = document.title = 'Create XPI Package for ' + addon.name;
@@ -52,7 +52,7 @@ function createXPI() {
 }
 
 function log(str, className) {
-	var li = document.createElementNS(XHTMLNS, 'li');
+	let li = document.createElementNS(XHTMLNS, 'li');
 	li.appendChild(document.createTextNode(str));
 	switch (className) {
 	case 'main-added':
@@ -73,12 +73,12 @@ function log(str, className) {
 }
 
 function readFile(file) {
-	var str = {};
+	let str = {};
 
-	var fiStream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
+	let fiStream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
 	fiStream.init(file, -1, 0, 0);
 
-	var istream = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
+	let istream = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
 	istream.init(fiStream, 'UTF-8', 0, 0);
 	istream.readString(-1, str);
 	istream.close();
@@ -87,20 +87,20 @@ function readFile(file) {
 }
 
 function readFileLines(file) {
-	var lines = [];
+	let lines = [];
 	try {
 		if (!file.exists()) {
 			return lines;
 		}
 
-		var fiStream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
+		let fiStream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
 		fiStream.init(file, 0x01, 0444, 0);
 
-		var istream = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
+		let istream = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
 		istream.init(fiStream, 'UTF-8', 0, 0);
 		istream.QueryInterface(Ci.nsIUnicharLineInputStream);
 
-		var line = {}, hasmore;
+		let line = {}, hasmore;
 		do {
 			hasmore = istream.readLine(line);
 			lines.push(line.value);
@@ -114,20 +114,20 @@ function readFileLines(file) {
 }
 
 function writeFile(file, data) {
-	var foStream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+	let foStream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
 	foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
 
-	var converter = Cc['@mozilla.org/intl/converter-output-stream;1'].createInstance(Ci.nsIConverterOutputStream);
+	let converter = Cc['@mozilla.org/intl/converter-output-stream;1'].createInstance(Ci.nsIConverterOutputStream);
 	converter.init(foStream, 'UTF-8', 0, 0);
 	converter.writeString(data);
 	converter.close();
 }
 
 function readList(filename) {
-	var listFile = directory.clone();
+	let listFile = directory.clone();
 	listFile.append(filename);
 
-	var list = [];
+	let list = [];
 	if (listFile.exists()) {
 		let lines = readFileLines(listFile);
 		for (let i = 0, iCount = lines.length; i < iCount; i++) {
@@ -154,16 +154,16 @@ function zipExtension() {
 	listOfExcludedFiles.push('.hgtags');
 
 	try {
-		var chromeDir = directory.clone();
+		let chromeDir = directory.clone();
 		chromeDir.append('chrome');
 
-		var xpiFile = directory.clone();
+		let xpiFile = directory.clone();
 		xpiFile.append(directory.leafName + '-' + version + '.xpi');
-		var xpiWriter = Cc['@mozilla.org/zipwriter;1'].createInstance(Ci.nsIZipWriter);
+		let xpiWriter = Cc['@mozilla.org/zipwriter;1'].createInstance(Ci.nsIZipWriter);
 		xpiWriter.open(xpiFile, 0x02 | 0x08 | 0x20);
 		xpiAddDirectory(directory, false, xpiWriter);
 
-		for (var i = 0; i < listOfFiles.length; i++) {
+		for (let i = 0; i < listOfFiles.length; i++) {
 			log('Not found: ' + listOfFiles[i], 'main-error');
 		}
 
@@ -178,17 +178,17 @@ function zipExtension() {
 }
 
 function xpiAddDirectory(directory, wildcard, zipWriter) {
-	var dirRelativePath = directory.path.substring(dirPathLength).replace(/\\/g, '/');
+	let dirRelativePath = directory.path.substring(dirPathLength).replace(/\\/g, '/');
 
-	var files = [];
-	var entries = directory.directoryEntries;
+	let files = [];
+	let entries = directory.directoryEntries;
 	while (entries.hasMoreElements()) {
 		files.push(entries.getNext().QueryInterface(Ci.nsIFile));
 	}
 	files.sort(sortFiles);
-	for (var i = 0; i < files.length; i++) {
-		var file = files[i];
-		var relativePath = file.path.substring(dirPathLength).replace(/\\/g, '/');
+	for (let i = 0; i < files.length; i++) {
+		let file = files[i];
+		let relativePath = file.path.substring(dirPathLength).replace(/\\/g, '/');
 
 		if (listOfExcludedFiles.indexOf(relativePath) >= 0) {
 			log('Excluded: ' + relativePath, 'main-notadded');
@@ -196,8 +196,8 @@ function xpiAddDirectory(directory, wildcard, zipWriter) {
 		}
 		if (!file.isDirectory() && listOfExcludedFiles.some(function(excludedFile) {
 			if (excludedFile.indexOf('*.') == 0) {
-				var extension = excludedFile.substring(1);
-				var index = relativePath.indexOf(extension);
+				let extension = excludedFile.substring(1);
+				let index = relativePath.indexOf(extension);
 				return index >= 0 && index + extension.length == relativePath.length;
 			}
 			return false;
@@ -208,8 +208,8 @@ function xpiAddDirectory(directory, wildcard, zipWriter) {
 
 		if (file.isDirectory()) {
 			if (hasListOfFiles) {
-				var index = listOfFiles.indexOf(relativePath);
-				var wildcardIndex = listOfFiles.indexOf(relativePath + '/*');
+				let index = listOfFiles.indexOf(relativePath);
+				let wildcardIndex = listOfFiles.indexOf(relativePath + '/*');
 				if (!wildcard && index < 0 && wildcardIndex < 0) {
 					log('Not added: ' + relativePath, 'main-notadded');
 					continue;
@@ -242,7 +242,7 @@ function xpiAddDirectory(directory, wildcard, zipWriter) {
 		}
 
 		if (!wildcard && hasListOfFiles) {
-			var index = listOfFiles.indexOf(relativePath);
+			let index = listOfFiles.indexOf(relativePath);
 			if (index < 0) {
 				log('Not added: ' + relativePath, 'main-notadded');
 				continue;
@@ -276,11 +276,11 @@ function checkLocales() {
 		return;
 	}
 
-	for (var l in locales) {
-		var files = {};
-		for (var i = 0; i < locales[l].length; i++) {
-			var file = locales[l][i];
-			var strings = {};
+	for (let l in locales) {
+		let files = {};
+		for (let i = 0; i < locales[l].length; i++) {
+			let file = locales[l][i];
+			let strings = {};
 			if (/\.properties/.test(file.leafName)) {
 				doPropertiesFile(file, strings);
 			} else {
@@ -291,19 +291,19 @@ function checkLocales() {
 		localeObj[l] = files;
 	}
 
-	for (var l in localeObj) {
+	for (let l in localeObj) {
 		if (l == 'en-US')
 			continue;
 
-		for (var f in localeObj['en-US']) {
+		for (let f in localeObj['en-US']) {
 			if (!localeObj[l][f]) {
 				log(f + ' in ' + l + ' is missing', 'main-error');
 				continue;
 			}
-			var yes = 0, equal = 0, no = 0;
-			for (var s in localeObj['en-US'][f]) {
-				var enString = localeObj['en-US'][f][s];
-				var lString = localeObj[l][f][s];
+			let yes = 0, equal = 0, no = 0;
+			for (let s in localeObj['en-US'][f]) {
+				let enString = localeObj['en-US'][f][s];
+				let lString = localeObj[l][f][s];
 				if (typeof lString == 'undefined') {
 					no++;
 				} else if (lString == enString) {
@@ -312,9 +312,9 @@ function checkLocales() {
 					yes++;
 				}
 			}
-			var d = document.getElementById(l + '/' + f);
+			let d = document.getElementById(l + '/' + f);
 			if (d) {
-				var s = document.createElement('span');
+				let s = document.createElement('span');
 				if (no > 0) {
 					s.className = 'no';
 					s.appendChild(document.createTextNode(no));
@@ -332,11 +332,11 @@ function checkLocales() {
 }
 
 function doPropertiesFile(file, strings) {
-	var leafName = file.leafName;
-	var lines = readFileLines(file);
+	let leafName = file.leafName;
+	let lines = readFileLines(file);
 	for (let i = 0, iCount = lines.length; i < iCount; i++) {
-		var realLine = lines[i].replace(/#.*$/, '');
-		var m = realLine.match(/^([\w\.-]+)\s*=\s*(.*)$/);
+		let realLine = lines[i].replace(/#.*$/, '');
+		let m = realLine.match(/^([\w\.-]+)\s*=\s*(.*)$/);
 		if (m) {
 			strings[m[1]] = m[2];
 		}
@@ -344,11 +344,11 @@ function doPropertiesFile(file, strings) {
 }
 
 function doDtdFile(file, strings) {
-	var leafName = file.leafName;
-	var lines = readFileLines(file);
+	let leafName = file.leafName;
+	let lines = readFileLines(file);
 	for (let i = 0, iCount = lines.length; i < iCount; i++) {
-		var realLine = lines[i].replace(/<!--.*$/, '');
-		var m = realLine.match(/ENTITY\s+([\w\.-]+)\s+"(.*)"/);
+		let realLine = lines[i].replace(/<!--.*$/, '');
+		let m = realLine.match(/ENTITY\s+([\w\.-]+)\s+"(.*)"/);
 		if (m) {
 			strings[m[1]] = m[2];
 		}

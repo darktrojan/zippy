@@ -2,7 +2,7 @@ Components.utils.import('resource://gre/modules/Services.jsm');
 
 const XULNS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 
-var ZippyController = {
+let ZippyController = {
 	observe: function(aSubject, aTopic, aData) {
 		let window = aSubject;
 		let document = window.document;
