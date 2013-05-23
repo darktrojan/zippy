@@ -153,13 +153,14 @@ function zipExtension() {
 	listOfExcludedFiles.push('.hgignore');
 	listOfExcludedFiles.push('.hgtags');
 
+	let xpiWriter;
 	try {
 		let chromeDir = directory.clone();
 		chromeDir.append('chrome');
 
 		let xpiFile = directory.clone();
 		xpiFile.append(directory.leafName + '-' + version + '.xpi');
-		let xpiWriter = Cc['@mozilla.org/zipwriter;1'].createInstance(Ci.nsIZipWriter);
+		xpiWriter = Cc['@mozilla.org/zipwriter;1'].createInstance(Ci.nsIZipWriter);
 		xpiWriter.open(xpiFile, 0x02 | 0x08 | 0x20);
 		xpiAddDirectory(directory, false, xpiWriter);
 
