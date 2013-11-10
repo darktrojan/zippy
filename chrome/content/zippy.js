@@ -56,8 +56,9 @@ function log(str, className) {
 	li.appendChild(document.createTextNode(str));
 	switch (className) {
 	case 'main-added':
-		if (/^chrome\/locale\/.{2,5}\/.+\.(dtd|properties)$/.test(str)) {
-			li.id = str.substring(14);
+		let match = /\/.+\.(dtd|properties)$/.exec(str);
+		if (match) {
+			li.id = match[0].substring(1);
 		}
 		packageLog.appendChild(li);
 		return;
