@@ -56,9 +56,9 @@ function log(str, className) {
 	li.appendChild(document.createTextNode(str));
 	switch (className) {
 	case 'main-added':
-		let match = /\/.+\.(dtd|properties)$/.exec(str);
+		let match = /\/([a-zA-Z-]+\/[^\/]+\.(dtd|properties))$/.exec(str);
 		if (match) {
-			li.id = match[0].substring(1);
+			li.id = match[1];
 		}
 		packageLog.appendChild(li);
 		return;
