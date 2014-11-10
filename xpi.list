@@ -1,4 +1,6 @@
 bootstrap.js
 chrome/*
 chrome.manifest
+components
+components/about-zippy.js
 install.rdf

@@ -2,6 +2,8 @@ Components.utils.import('resource://gre/modules/Services.jsm');
 
 const XULNS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 
+let aboutPage = {};
+
 let ZippyController = {
 	observe: function(aSubject, aTopic, aData) {
 		let window = aSubject;
@@ -24,7 +26,7 @@ let ZippyController = {
 			menuitem.setAttribute('id', 'zippy-menuitem');
 			menuitem.setAttribute('label', 'Create XPI');
 			menuitem.addEventListener('command', function() {
-				let tabURI = 'chrome://zippy/content/zippy.xhtml?id=' + this.getAttribute('addon-id');
+				let tabURI = 'about:zippy?id=' + this.getAttribute('addon-id');
 				let recentWindow = Services.wm.getMostRecentWindow('navigator:browser');
 				if (recentWindow) {
 					let browser = recentWindow.gBrowser;
@@ -88,6 +90,15 @@ function startup(params, aReason) {
 
 	Services.obs.addObserver(ZippyController, 'chrome-document-global-created', false);
 	enumerateAddonsPages(ZippyController.load);
+
+	Services.scriptloader.loadSubScript(params.resourceURI.spec + 'components/about-zippy.js', aboutPage);
+	let registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+	registrar.registerFactory(
+		aboutPage.ZippyAboutHandler.prototype.classID,
+		'',
+		aboutPage.ZippyAboutHandler.prototype.contractID,
+		aboutPage.NSGetFactory(aboutPage.ZippyAboutHandler.prototype.classID)
+	);
 }
 function shutdown(params, aReason) {
 	Services.obs.removeObserver(ZippyController, 'chrome-document-global-created');
@@ -97,6 +108,12 @@ function shutdown(params, aReason) {
 		params.installPath.QueryInterface(Components.interfaces.nsILocalFile);
 		Components.manager.removeBootstrappedManifestLocation(params.installPath);
 	}
+
+	let registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+	registrar.unregisterFactory(
+		aboutPage.ZippyAboutHandler.prototype.classID,
+		aboutPage.NSGetFactory(aboutPage.ZippyAboutHandler.prototype.classID)
+	);
 }
 
 function enumerateAddonsPages(callback) {

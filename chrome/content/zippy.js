@@ -7,7 +7,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/AddonManager.jsm');
 Cu.import('resource://gre/modules/FileUtils.jsm');
 
-let id = location.search.replace('?id=', '');
+let id = location.href.replace(/^.*?id=/, '');
 let dirPathLength;
 let listOfFiles, hasListOfFiles;
 let listOfExcludedFiles;
