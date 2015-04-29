@@ -13,7 +13,10 @@
 		<h1 id="title"></h1>
 
 		<fieldset style="float: left; width: 300px;">
-			<p>Source: <span id="location"></span></p>
+			<p>Source:
+				<span id="location"></span>
+				<button type="button" onclick="openLocation();">Open</button>
+			</p>
 			<label for="version">Version: </label><input type="text" id="version" /><br />
 			<input type="checkbox" id="amoproperties" /><label for="amoproperties"> Include amo.properties files</label>
 			<div style="text-align: right;">

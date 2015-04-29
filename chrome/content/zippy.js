@@ -33,6 +33,10 @@ AddonManager.getAddonByID(id, function(addon) {
 	}
 });
 
+function openLocation() {
+	directory.reveal();
+}
+
 function createXPI() {
 	let rdfFile = directory.clone();
 	rdfFile.append('install.rdf');
@@ -63,7 +67,7 @@ function log(str, className) {
 		packageLog.appendChild(li);
 		return;
 	case 'main-notadded':
-		li.style.color = '#ccc';
+		li.style.color = '#f60';
 		packageLog.appendChild(li);
 		return;
 	case 'main-error':
