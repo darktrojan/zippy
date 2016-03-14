@@ -148,7 +148,7 @@ function readList(filename) {
 function zipExtension() {
 	listOfFiles = readList('xpi.list');
 	hasListOfFiles = listOfFiles.length > 0;
-	listOfExcludedFiles = readList('xpi-exclude.list');
+	listOfExcludedFiles = readList('.xpiignore').concat(readList('xpi-exclude.list'));
 	listOfExcludedFiles.push('*.list');
 	listOfExcludedFiles.push('*.xpi');
 	listOfExcludedFiles.push('*.zip');
@@ -157,6 +157,9 @@ function zipExtension() {
 	listOfExcludedFiles.push('.hg');
 	listOfExcludedFiles.push('.hgignore');
 	listOfExcludedFiles.push('.hgtags');
+	listOfExcludedFiles.push('.jscsrc');
+	listOfExcludedFiles.push('.jshintrc');
+	listOfExcludedFiles.push('.xpiignore');
 
 	let xpiWriter;
 	try {

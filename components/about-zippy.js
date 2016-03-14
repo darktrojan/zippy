@@ -19,4 +19,4 @@ ZippyAboutHandler.prototype = {
 	QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIAboutModule])
 };
 
-let NSGetFactory = XPCOMUtils.generateNSGetFactory([ZippyAboutHandler]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ZippyAboutHandler]);
